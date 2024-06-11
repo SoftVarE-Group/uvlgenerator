@@ -1,5 +1,8 @@
 package config;
 
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 import de.vill.model.Attribute;
 import de.vill.model.Feature;
 
@@ -9,7 +12,11 @@ import java.util.Random;
 
 public class AttributeBundle {
 
-    List<AttributeOption> attributeOptionList;
+    public List<AttributeOption> attributeOptionList;
+
+    public AttributeBundle(List<AttributeOption> attributeOptionList) {
+        attributeOptionList = new ArrayList<>();
+    }
 
     public List<Attribute<?>> getAttributesToAdd(Random random, Feature feature) {
         List<Attribute<?>> attributes = new ArrayList<>();
@@ -22,26 +29,18 @@ public class AttributeBundle {
         return attributes;
     }
 
-    public class AttributeOption {
-        final String attributeName;
-        final int min;
-        final int max;
-        final int probability;
-
-        public AttributeOption(String attributeName, int min, int max, int probability) {
-            this.attributeName = attributeName;
-            this.min = min;
-            this.max = max;
-            this.probability = probability;
+    public static AttributeBundle fromJson(JsonArray attributes) {
+        List<AttributeOption> attributeList = new ArrayList<>();
+        for (JsonValue attribute : attributes) {
+            JsonObject attributeObject = attribute.asObject();
+            String attributeName = attributeObject.get("name").asString();
+            int min = attributeObject.get("value").asArray().get(0).asInt();
+            int max = attributeObject.get("value").asArray().get(1).asInt();
+            double probability = attributeObject.get("probability").asDouble();
+            boolean useInConstraints = attributeObject.get("useInConstraints").asBoolean();
+            attributeList.add(new AttributeOption(attributeName, min, max, probability, useInConstraints));
         }
-
-
-        public Attribute<Integer> getNextValue(Random random, Feature parent) {
-            if (random.nextInt(1000) > probability * 1000) {return null;}
-            return new Attribute<Integer>(attributeName, random.nextInt(max - min) + min, parent);
-
-        }
-
+        return new AttributeBundle(attributeList);
     }
 
 }

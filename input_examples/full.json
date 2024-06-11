@@ -1,0 +1,53 @@
+{
+  "general" : {
+    "numberModels" : 100,
+    "seed" : 42,
+    "ensureSAT" : true
+  },
+  "tree" : {
+    "features" : {
+      "number" : [800,1000],
+      "distribution" : {
+        "boolean" : 0.7,
+        "integer" : 0.2,
+        "real" : 0.1,
+        "string" : 0
+      }
+    },
+    "maxTreeDepth" : 5,
+    "groups" : {
+      "distribution": {
+        "optional" : 0.1,
+        "mandatory" : 0.2,
+        "alternative" : 0.5,
+        "or" : 0.2
+      }
+    }
+  },
+  "constraints" : {
+    "number" : [200,300],
+    "ecr" : 0.8,
+    "variablesPerConstraint" : [2,15],
+    "distribution" : {
+      "boolean" : 0.9,
+      "numeric" : 0.07,
+      "aggregate" : 0.03,
+      "string" : 0,
+      "groupCardinality" : 0
+    }
+  },
+  "attributes" : [
+    {
+      "name" : "Price",
+      "value" : [10,1000],
+      "attachProbability" : 0.5,
+      "useInConstraints" : true
+    },
+    {
+      "name" : "Fun",
+      "value" : [-100, 100],
+      "attachProbability" : 0.1,
+      "useInConstraints" : true
+    }
+  ]
+}

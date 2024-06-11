@@ -1,49 +1,31 @@
 package config;
 
+import com.eclipsesource.json.JsonObject;
+import de.vill.model.FeatureType;
 import de.vill.model.Group;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class GroupTypeOption implements ConfigurationOption<Group.GroupType>{
+public class GroupTypeOption extends DistributionOption<Group.GroupType>{
 
-    private final String optionName;
-    int optionalMax;
-    int mandatoryMax;
-    int alternativeMax;
-    int orMax;
+    public static GroupTypeOption fromJson(JsonObject distribution) {
+        Map<Group.GroupType, Double> options = new HashMap<>();
+        options.put(Group.GroupType.OPTIONAL, distribution.get("optional").asDouble());
+        options.put(Group.GroupType.OR, distribution.get("or").asDouble());
+        options.put(Group.GroupType.MANDATORY, distribution.get("mandatory").asDouble());
+        options.put(Group.GroupType.ALTERNATIVE, distribution.get("alternative").asDouble());
+        options.put(Group.GroupType.GROUP_CARDINALITY, distribution.get("groupCardinality").asDouble());
+        return new GroupTypeOption(options);
+    }
 
     public GroupTypeOption(Map<Group.GroupType, Double> distribution){
-        this.optionName = "groupType";
-        optionalMax = (int) Math.round(distribution.get(Group.GroupType.OPTIONAL) * 1000);
-        mandatoryMax = optionalMax + (int) Math.round(distribution.get(Group.GroupType.MANDATORY) * 1000);
-        alternativeMax = mandatoryMax + (int) Math.round(distribution.get(Group.GroupType.ALTERNATIVE) * 1000);
-        orMax = alternativeMax + (int) Math.round(distribution.get(Group.GroupType.OR) * 1000);
+        super("groupType", distribution);
     }
 
     @Override
-    public String getOptionName() {
-        return optionName;
-    }
-
-    @Override
-    public Group.GroupType getNextValue(Random random) {
-        int result = random.nextInt(1000);
-        if(result <= optionalMax){
-            return Group.GroupType.OPTIONAL;
-        }else if(result <= mandatoryMax){
-            return Group.GroupType.MANDATORY;
-        } else if(result <= alternativeMax){
-            return Group.GroupType.ALTERNATIVE;
-        } else if(result <= orMax){
-            return Group.GroupType.OR;
-        } else {
-            return Group.GroupType.GROUP_CARDINALITY;
-        }
-    }
-
-    @Override
-    public Group.GroupType getStaticValue() {
-        return null;
+    public Group.GroupType fromString(String value) {
+        return Group.GroupType.valueOf(value.toUpperCase());
     }
 }
