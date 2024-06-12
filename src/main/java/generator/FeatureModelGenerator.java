@@ -1,10 +1,12 @@
 package generator;
 
+import config.AttributeOption;
 import config.Configuration;
 import config.ConstraintTypeOption;
 import de.vill.model.*;
 import de.vill.model.building.FeatureModelBuilder;
 import de.vill.model.constraint.*;
+import de.vill.model.expression.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,10 +17,12 @@ public class FeatureModelGenerator {
     int currentId;
     List<Feature> featuresToUse;
     List<Attribute<?>> attributesToUse;
+    List<String> attributeNames;
 
     List<Group> parentGroups;
 
     public List<FeatureModel> run(Configuration config) {
+        this.config = config;
         List<FeatureModel> models = new ArrayList<>();
         while (models.size() < config.numberOfModels.getStaticValue()) {
             models.add(nextFeatureModel());
@@ -49,11 +53,16 @@ public class FeatureModelGenerator {
                 addGroupToFeature(current, getNextGroupType());
             }
         }
+        cleanUpTree();
+    }
+
+    private void cleanUpTree() {
+
     }
 
     private void constructConstraints() {
         featuresToUse = getFeaturesToUseInConstraints();
-        attributesToUse = getAttributesToUseInConstraints(featuresToUse);
+        initAttributesToUseInConstraints(featuresToUse);
 
         while (builder.getFeatureModel().getOwnConstraints().size() < config.numberOfConstraints.getStaticValue()) {
             builder.addConstraint(getNextConstraint());
@@ -61,20 +70,17 @@ public class FeatureModelGenerator {
     }
 
     private Constraint getNextConstraint() {
-        switch (getNextConstraintType()) {
-            case STRING:
-                return generateStringConstraint();
-            case AGGREGATE:
-                return generateAggregateConstraint();
-            case BOOLEAN:
-                return generateBooleanConstraint();
-            default:
-                return genereateNumericConstraint();
-        }
+        return switch (getNextConstraintType()) {
+            case STRING -> generateStringConstraint();
+            case AGGREGATE -> generateAggregateConstraint();
+            case BOOLEAN -> generateBooleanConstraint();
+            default -> genereateNumericConstraint();
+        };
     }
 
     private Constraint generateStringConstraint() {
         int numberOfVariables = config.constraintSize.getNextValue(config.randomGenerator);
+        return null;
     }
 
     private Constraint generateBooleanConstraint() {
@@ -83,12 +89,12 @@ public class FeatureModelGenerator {
         List<LiteralConstraint> literals = Arrays.stream(variableIndices).mapToObj(x -> new LiteralConstraint(featuresToUse.get(x))).collect(Collectors.toList());
         Constraint previous = config.randomGenerator.nextInt(2) == 0 ? literals.get(0) : new NotConstraint(literals.get(0));
         for (int i = 1; i < literals.size(); i++) {
-            previous = getNextSubConstraint(literals.get(i), previous);
+            previous = getNextBooleanSubConstraint(literals.get(i), previous);
         }
         return previous;
     }
 
-    private Constraint getNextSubConstraint(Constraint nextLiteral, Constraint previous) {
+    private Constraint getNextBooleanSubConstraint(Constraint nextLiteral, Constraint previous) {
         switch (config.randomGenerator.nextInt(4)) {
             case 0:
                 return new AndConstraint(nextLiteral, previous);
@@ -103,11 +109,73 @@ public class FeatureModelGenerator {
 
 
     private Constraint genereateNumericConstraint() {
-
+        int numberOfVariables = config.constraintSize.getNextValue(config.randomGenerator);
+        int[] variableIndices = getRandomIndices(attributesToUse.size(), numberOfVariables, config.randomGenerator);
+        int rightSideSwap = config.randomGenerator.nextInt(numberOfVariables);
+        List<LiteralExpression> literals = Arrays.stream(variableIndices).mapToObj(x -> new LiteralExpression(attributesToUse.get(x))).collect(Collectors.toList());
+        Expression previous = literals.get(0);
+        for (int i = 1; i < rightSideSwap; i++) {
+            previous = getNextNumericSubExpression(literals.get(i), previous);
+        }
+        Expression leftSide = previous;
+        previous = literals.get(rightSideSwap);
+        for (int i = rightSideSwap + 1; i < numberOfVariables; i++) {
+            previous = getNextNumericSubExpression(literals.get(i), previous);
+        }
+        switch (config.randomGenerator.nextInt(6)) {
+            case 0:
+                return new EqualEquationConstraint(leftSide, previous);
+            case 1:
+                return new GreaterEquationConstraint(leftSide, previous);
+            case 2:
+                return new GreaterEqualsEquationConstraint(leftSide, previous);
+            case 3:
+                return new LowerEquationConstraint(leftSide, previous);
+            case 4:
+                return new LowerEqualsEquationConstraint(leftSide, previous);
+            default:
+                return new NotEqualsEquationConstraint(leftSide, previous);
+        }
     }
 
-    private Constraint generateAggregateConstraint() {
+    private Expression getNextNumericSubExpression(Expression nextLiteral, Expression previous) {
+        switch (config.randomGenerator.nextInt(4)) {
+            case 0:
+                return new AddExpression(nextLiteral, previous);
+            case 1:
+                return new SubExpression(nextLiteral, previous);
+            case 2:
+                return new MulExpression(nextLiteral, previous);
+            default:
+                return new DivExpression(nextLiteral, previous);
+        }
+    }
 
+    /**
+     * TODO: More flexiblity
+     * @return
+     */
+    private Constraint generateAggregateConstraint() {
+        String attributeName = attributeNames.get(config.randomGenerator.nextInt(attributeNames.size()));
+        int threshold = 0;
+        boolean average = false;
+        if (config.randomGenerator.nextInt(2) == 1) {
+            average = true;
+        }
+        for (AttributeOption attributeOption : config.attributes.attributeOptionList) {
+            if (attributeOption.attributeName.equals(attributeName)) {
+                if (average) {
+                    threshold = config.randomGenerator.nextInt(attributeOption.max - attributeOption.min) + attributeOption.min;
+                } else {
+                    threshold = config.randomGenerator.nextInt(attributeOption.max * 5); // TODO: replace
+                }
+            }
+        }
+        if (average) {
+            return new GreaterEqualsEquationConstraint(new SumAggregateFunctionExpression(new GlobalAttribute(attributeName, builder.getFeatureModel())), new NumberExpression((double) threshold));
+        } else {
+            return new GreaterEqualsEquationConstraint(new AvgAggregateFunctionExpression(new GlobalAttribute(attributeName, builder.getFeatureModel())), new NumberExpression((double) threshold));
+        }
     }
 
     private List<Feature> getFeaturesToUseInConstraints() {
@@ -117,9 +185,9 @@ public class FeatureModelGenerator {
         return shuffleCopy.subList(0, numberOfFeatures);
     }
 
-    private List<Attribute<?>> getAttributesToUseInConstraints(List<Feature> featuresToUse) {
-        List<Attribute<?>> attributesToUse = new ArrayList<>();
-        List<String> attributeNames = config.attributes.attributeOptionList.stream().filter(x -> x.includeInConstraints).map(x -> x.attributeName).collect(Collectors.toList());
+    private void initAttributesToUseInConstraints(List<Feature> featuresToUse) {
+        attributesToUse = new ArrayList<>();
+        attributeNames = config.attributes.attributeOptionList.stream().filter(x -> x.includeInConstraints).map(x -> x.attributeName).collect(Collectors.toList());
         for (String attributeName : attributeNames) {
             for (Feature feature : featuresToUse) {
                 if (feature.getAttributes().containsKey(attributeName)) {
@@ -127,8 +195,6 @@ public class FeatureModelGenerator {
                 }
             }
         }
-        return attributesToUse;
-
     }
 
     private ConstraintTypeOption.ConstraintType getNextConstraintType() {
@@ -172,7 +238,7 @@ public class FeatureModelGenerator {
      * @return
      */
     private Group getNextGroup() {
-        return parentGroups.get(config.randomGenerator.nextInt(parentGroups.size() - 1));
+        return parentGroups.get(config.randomGenerator.nextInt(parentGroups.size()));
     }
 
     /**
@@ -183,12 +249,13 @@ public class FeatureModelGenerator {
      * @return
      */
     private static int[] getRandomIndices(int length, int numberOf, Random random) {
-        int[] indices = new int[length];
+        int[] indices = new int[numberOf];
         for (int i = 0; i < numberOf; i++) {
-            boolean alreadyCovered = false;
+            boolean alreadyCovered;
             int randomIndex;
             do {
                 randomIndex = random.nextInt(length);
+                alreadyCovered = false;
                 for (int alreadyIncluded : indices) {
                     if (randomIndex == alreadyIncluded) {
                         alreadyCovered = true;

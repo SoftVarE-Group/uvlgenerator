@@ -48,9 +48,9 @@ public class Configuration {
         this.numberOfFeatures = parseIntegerOption("numberFeatures", features.get("number"));
         this.featureType = FeatureTypeOption.fromJson(features.get("distribution").asObject());
         // -- Depth
-        this.treeDepth = parseIntegerOption("treeDepth", tree.get("maxTreedDepth"));
+        this.treeDepth = parseIntegerOption("treeDepth", tree.get("maxTreeDepth"));
         // -- Groups
-        this.groupType = GroupTypeOption.fromJson(features.get("groups").asObject());
+        this.groupType = GroupTypeOption.fromJson(tree.get("groups").asObject().get("distribution").asObject());
 
         // Constraints
         JsonObject constraints = json.get("constraints").asObject();

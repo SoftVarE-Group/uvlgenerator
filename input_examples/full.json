@@ -1,6 +1,6 @@
 {
   "general" : {
-    "numberModels" : 100,
+    "numberModels" : 3,
     "seed" : 42,
     "ensureSAT" : true
   },
@@ -20,7 +20,8 @@
         "optional" : 0.1,
         "mandatory" : 0.2,
         "alternative" : 0.5,
-        "or" : 0.2
+        "or" : 0.2,
+        "groupCardinality" : 0
       }
     }
   },
@@ -32,8 +33,7 @@
       "boolean" : 0.9,
       "numeric" : 0.07,
       "aggregate" : 0.03,
-      "string" : 0,
-      "groupCardinality" : 0
+      "string" : 0
     }
   },
   "attributes" : [

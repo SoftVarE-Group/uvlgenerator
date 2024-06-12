@@ -15,7 +15,7 @@ public class AttributeBundle {
     public List<AttributeOption> attributeOptionList;
 
     public AttributeBundle(List<AttributeOption> attributeOptionList) {
-        attributeOptionList = new ArrayList<>();
+        this.attributeOptionList = attributeOptionList;
     }
 
     public List<Attribute<?>> getAttributesToAdd(Random random, Feature feature) {
@@ -36,7 +36,7 @@ public class AttributeBundle {
             String attributeName = attributeObject.get("name").asString();
             int min = attributeObject.get("value").asArray().get(0).asInt();
             int max = attributeObject.get("value").asArray().get(1).asInt();
-            double probability = attributeObject.get("probability").asDouble();
+            double probability = attributeObject.get("attachProbability").asDouble();
             boolean useInConstraints = attributeObject.get("useInConstraints").asBoolean();
             attributeList.add(new AttributeOption(attributeName, min, max, probability, useInConstraints));
         }

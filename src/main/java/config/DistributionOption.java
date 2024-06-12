@@ -1,5 +1,6 @@
 package config;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -12,6 +13,8 @@ public abstract class DistributionOption<Enum> implements IDistributionOption<En
 
     public DistributionOption(String name, Map<Enum, Double> distribution) {
         this.optionName = name;
+        this.thresholds = new ArrayList<>();
+        this.values = new ArrayList<>();
         int latestThreshold = 0;
         for (Enum value : distribution.keySet()) {
             latestThreshold = (int) Math.round(distribution.get(value) * 1000) + latestThreshold;

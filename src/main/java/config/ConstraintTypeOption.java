@@ -11,10 +11,10 @@ public class ConstraintTypeOption extends DistributionOption<ConstraintTypeOptio
 
     public static ConstraintTypeOption fromJson(JsonObject distribution) {
         Map<ConstraintType, Double> options = new HashMap<>();
-        options.put(ConstraintType.BOOLEAN, distribution.get("Boolean").asDouble());
-        options.put(ConstraintType.NUMERIC, distribution.get("Numeric").asDouble());
-        options.put(ConstraintType.AGGREGATE, distribution.get("Aggregate").asDouble());
-        options.put(ConstraintType.STRING, distribution.get("String").asDouble());
+        options.put(ConstraintType.BOOLEAN, distribution.get("boolean").asDouble());
+        options.put(ConstraintType.NUMERIC, distribution.get("numeric").asDouble());
+        options.put(ConstraintType.AGGREGATE, distribution.get("aggregate").asDouble());
+        options.put(ConstraintType.STRING, distribution.get("string").asDouble());
         return new ConstraintTypeOption(options);
     }
 
