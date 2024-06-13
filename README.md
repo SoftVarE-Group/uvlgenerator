@@ -1,6 +1,20 @@
+# UVL Generator
+
+### Dependencies
+This UVL generator depends on [uvl-smt](https://github.com/SoftVarE-Group/uvl-smt) for reasoning and [java-fm-metamodel](https://github.com/Universal-Variability-Language/java-fm-metamodel/tree/refactoring_metamodel) for managing the model objects. 
+
+### Usage
+The generator expects a path to a config.json file as input. You can find examples for usage in `input_examples`.
+The main method can be found in the `Runner.java` class.
+
+The .json contains various configuration options that enable the user to control structural properties of the generated feature models.
+The example below generates 10 feature models with 500-600 features and 50--100 constraints. 
+Furthermore, the groups in the tree hierarchy are 10% optional, 20% mandatory and so on.
+An attribute price is attached to features with a 50% chance and with values between 10 and 1000. 
+```json
 {
   "general" : {
-    "numberModels" : 5,
+    "numberModels" : 10,
     "seed" : 42,
     "ensureSAT" : true,
     "generatorVersion" : "0.1"
@@ -48,12 +62,7 @@
       "value" : [10,1000],
       "attachProbability" : 0.5,
       "useInConstraints" : true
-    },
-    {
-      "name" : "Fun",
-      "value" : [-100, 100],
-      "attachProbability" : 0.1,
-      "useInConstraints" : true
     }
   ]
 }
+```

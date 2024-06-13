@@ -1,12 +1,15 @@
 package generator;
 
+import Reasoning.SMTSatisfiabilityChecker;
 import config.AttributeOption;
 import config.Configuration;
 import config.ConstraintTypeOption;
+import conversion.FmToSMTConverter;
 import de.vill.model.*;
 import de.vill.model.building.FeatureModelBuilder;
 import de.vill.model.constraint.*;
 import de.vill.model.expression.*;
+import org.sosy_lab.common.configuration.InvalidConfigurationException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,10 +19,17 @@ public class FeatureModelGenerator {
     Configuration config;
     int currentId;
     List<Feature> featuresToUse;
+    List<Feature> stringFeaturesToUse;
+    List<Feature> integerFeaturesToUse;
+    List<Feature> doubleFeaturesToUse;
     List<Attribute<?>> attributesToUse;
     List<String> attributeNames;
 
     List<Group> parentGroups;
+
+    FmToSMTConverter smtConverter;
+
+    SMTSatisfiabilityChecker smtChecker;
 
     public List<FeatureModel> run(Configuration config) {
         this.config = config;
@@ -36,16 +46,22 @@ public class FeatureModelGenerator {
         builder = new FeatureModelBuilder();
 
         constructTree();
+        try {
+            smtConverter = new FmToSMTConverter(builder.getFeatureModel());
+        } catch (InvalidConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+        smtChecker = new SMTSatisfiabilityChecker(smtConverter.convertFeatureModel(), smtConverter.getContext());
         constructConstraints();
 
         return builder.getFeatureModel();
     }
 
     private void constructTree() {
-        Feature rootFeature = builder.addRootFeature(getNextFeatureName(), getNextFeatureType(), getNextCardinality());
+        Feature rootFeature = builder.addRootFeature(getNextFeatureName(), getNextFeatureType(), getNextFeatureCardinality());
         addGroupToFeature(rootFeature, getNextGroupType());
         while (builder.getFeatureModel().getFeatureMap().size() < config.numberOfFeatures.getStaticValue()) {
-            Feature current = builder.addFeature(getNextFeatureName(), getNextGroup(), null, getNextFeatureType(), getNextCardinality());
+            Feature current = builder.addFeature(getNextFeatureName(), getNextGroup(), null, getNextFeatureType(), getNextFeatureCardinality());
             for (Attribute<?> attribute : config.attributes.getAttributesToAdd(config.randomGenerator, current)) {
                 builder.addAttribute(current, attribute);
             }
@@ -57,15 +73,26 @@ public class FeatureModelGenerator {
     }
 
     private void cleanUpTree() {
-
+        for (Feature feature : builder.getFeatureModel().getFeatureMap().values()) {
+            for (int i = 0; i < feature.getChildren().size(); i++) {
+                if (feature.getChildren().get(i).getFeatures().isEmpty()) {
+                    feature.getChildren().remove(i);
+                    i--;
+                }
+            }
+        }
     }
 
     private void constructConstraints() {
-        featuresToUse = getFeaturesToUseInConstraints();
+        initFeaturesToUseInConstraints();
         initAttributesToUseInConstraints(featuresToUse);
 
         while (builder.getFeatureModel().getOwnConstraints().size() < config.numberOfConstraints.getStaticValue()) {
-            builder.addConstraint(getNextConstraint());
+            Constraint next = getNextConstraint();
+            if (next == null) continue; // Can happen if we construct constraints over missing feature types
+            if (!config.ensureSAT.getStaticValue() || smtChecker.checkAndKeepIfSatisfiable(smtConverter.convertConstraintToSMT(next))) {
+                builder.addConstraint(next);
+            }
         }
     }
 
@@ -79,8 +106,15 @@ public class FeatureModelGenerator {
     }
 
     private Constraint generateStringConstraint() {
-        int numberOfVariables = config.constraintSize.getNextValue(config.randomGenerator);
-        return null;
+        if (stringFeaturesToUse.isEmpty()) return null;
+        Feature feature = stringFeaturesToUse.get(config.randomGenerator.nextInt(stringFeaturesToUse.size()));
+        return switch (config.randomGenerator.nextInt(2)) {
+            case 0 ->
+                    new EqualEquationConstraint(new LiteralExpression(feature), new StringExpression(Integer.toString(config.randomGenerator.nextInt())));
+            case 1 ->
+                    new EqualEquationConstraint(new LengthAggregateFunctionExpression(feature), new NumberExpression(config.randomGenerator.nextInt()));
+            default -> null;
+        };
     }
 
     private Constraint generateBooleanConstraint() {
@@ -95,16 +129,12 @@ public class FeatureModelGenerator {
     }
 
     private Constraint getNextBooleanSubConstraint(Constraint nextLiteral, Constraint previous) {
-        switch (config.randomGenerator.nextInt(4)) {
-            case 0:
-                return new AndConstraint(nextLiteral, previous);
-            case 1:
-                return new OrConstraint(nextLiteral, previous);
-            case 2:
-                return new EquivalenceConstraint(nextLiteral, previous);
-            default:
-                return new ImplicationConstraint(nextLiteral, previous);
-        }
+        return switch (config.randomGenerator.nextInt(4)) {
+            case 0 -> new AndConstraint(nextLiteral, previous);
+            case 1 -> new OrConstraint(nextLiteral, previous);
+            case 2 -> new EquivalenceConstraint(nextLiteral, previous);
+            default -> new ImplicationConstraint(nextLiteral, previous);
+        };
     }
 
 
@@ -122,33 +152,23 @@ public class FeatureModelGenerator {
         for (int i = rightSideSwap + 1; i < numberOfVariables; i++) {
             previous = getNextNumericSubExpression(literals.get(i), previous);
         }
-        switch (config.randomGenerator.nextInt(6)) {
-            case 0:
-                return new EqualEquationConstraint(leftSide, previous);
-            case 1:
-                return new GreaterEquationConstraint(leftSide, previous);
-            case 2:
-                return new GreaterEqualsEquationConstraint(leftSide, previous);
-            case 3:
-                return new LowerEquationConstraint(leftSide, previous);
-            case 4:
-                return new LowerEqualsEquationConstraint(leftSide, previous);
-            default:
-                return new NotEqualsEquationConstraint(leftSide, previous);
-        }
+        return switch (config.randomGenerator.nextInt(6)) {
+            case 0 -> new EqualEquationConstraint(leftSide, previous);
+            case 1 -> new GreaterEquationConstraint(leftSide, previous);
+            case 2 -> new GreaterEqualsEquationConstraint(leftSide, previous);
+            case 3 -> new LowerEquationConstraint(leftSide, previous);
+            case 4 -> new LowerEqualsEquationConstraint(leftSide, previous);
+            default -> new NotEqualsEquationConstraint(leftSide, previous);
+        };
     }
 
     private Expression getNextNumericSubExpression(Expression nextLiteral, Expression previous) {
-        switch (config.randomGenerator.nextInt(4)) {
-            case 0:
-                return new AddExpression(nextLiteral, previous);
-            case 1:
-                return new SubExpression(nextLiteral, previous);
-            case 2:
-                return new MulExpression(nextLiteral, previous);
-            default:
-                return new DivExpression(nextLiteral, previous);
-        }
+        return switch (config.randomGenerator.nextInt(4)) {
+            case 0 -> new AddExpression(nextLiteral, previous);
+            case 1 -> new SubExpression(nextLiteral, previous);
+            case 2 -> new MulExpression(nextLiteral, previous);
+            default -> new DivExpression(nextLiteral, previous);
+        };
     }
 
     /**
@@ -178,11 +198,23 @@ public class FeatureModelGenerator {
         }
     }
 
-    private List<Feature> getFeaturesToUseInConstraints() {
+    private void initFeaturesToUseInConstraints() {
         int numberOfFeatures = (int) (config.ecr.getStaticValue() * (double) builder.getFeatureModel().getFeatureMap().size());
         List<Feature> shuffleCopy = new ArrayList<>(builder.getFeatureModel().getFeatureMap().values());
         Collections.shuffle(shuffleCopy);
-        return shuffleCopy.subList(0, numberOfFeatures);
+        featuresToUse = shuffleCopy.subList(0, numberOfFeatures);
+        stringFeaturesToUse = new ArrayList<>();
+        integerFeaturesToUse = new ArrayList<>();
+        doubleFeaturesToUse = new ArrayList<>();
+        for (Feature feature : featuresToUse) {
+            if (feature.getFeatureType() == FeatureType.STRING) {
+                stringFeaturesToUse.add(feature);
+            } else if (feature.getFeatureType() == FeatureType.INT) {
+                integerFeaturesToUse.add(feature);
+            } else if (feature.getFeatureType() == FeatureType.REAL) {
+                doubleFeaturesToUse.add(feature);
+            }
+        }
     }
 
     private void initAttributesToUseInConstraints(List<Feature> featuresToUse) {
@@ -215,6 +247,9 @@ public class FeatureModelGenerator {
         return depth;
     }
 
+    private Cardinality getNextFeatureCardinality() {
+        return config.featureCardinality.getNextValue(config.randomGenerator);
+    }
 
 
     private String getNextFeatureName() {

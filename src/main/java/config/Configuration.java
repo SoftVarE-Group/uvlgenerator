@@ -17,6 +17,7 @@ public class Configuration {
     public ConfigurationOption<Integer> treeDepth;
     public ConfigurationOption<Integer> numberOfChildren;
     public FeatureTypeOption featureType;
+    public FeatureCardinalityOption featureCardinality;
 
 
     // Constraints
@@ -45,18 +46,20 @@ public class Configuration {
 
         // -- Features
         JsonObject features = tree.get("features").asObject();
-        this.numberOfFeatures = parseIntegerOption("numberFeatures", features.get("number"));
+        this.numberOfFeatures = IntegerOption.parseIntegerOption("numberFeatures", features.get("number"));
         this.featureType = FeatureTypeOption.fromJson(features.get("distribution").asObject());
+        this.numberOfChildren = IntegerOption.parseIntegerOption("numberChildren", features.get("number"));
+        this.featureCardinality = FeatureCardinalityOption.fromJson(features.get("cardinality").asObject());
         // -- Depth
-        this.treeDepth = parseIntegerOption("treeDepth", tree.get("maxTreeDepth"));
+        this.treeDepth = IntegerOption.parseIntegerOption("treeDepth", tree.get("maxTreeDepth"));
         // -- Groups
         this.groupType = GroupTypeOption.fromJson(tree.get("groups").asObject().get("distribution").asObject());
 
         // Constraints
         JsonObject constraints = json.get("constraints").asObject();
-        this.numberOfConstraints = parseIntegerOption("numberOfConstraints", constraints.get("number"));
-        this.ecr = parseDoubleOption("ecr", constraints.get("ecr"));
-        this.constraintSize = parseIntegerOption("constraintSize", constraints.get("variablesPerConstraint"));
+        this.numberOfConstraints = IntegerOption.parseIntegerOption("numberOfConstraints", constraints.get("number"));
+        this.ecr = DoubleOption.parseDoubleOption("ecr", constraints.get("ecr"));
+        this.constraintSize = IntegerOption.parseIntegerOption("constraintSize", constraints.get("variablesPerConstraint"));
         this.constraintDistribution = ConstraintTypeOption.fromJson(constraints.get("distribution").asObject());
 
         // Attributes
@@ -64,24 +67,8 @@ public class Configuration {
 
     }
 
-    private ConfigurationOption<Integer> parseIntegerOption(String name, JsonValue value) {
-        if (value.isArray()) {
-            return new IntegerRangeOption(name, value.asArray().get(0).asInt(), value.asArray().get(1).asInt());
-        } else if (value.isNumber()) {
-            return new IntegerOption(value.asInt(), name);
-        } else {
-            return null;
-        }
-    }
 
-    private ConfigurationOption<Double> parseDoubleOption(String name, JsonValue value) {
-        if (value.isArray()) {
-            return new DoubleRangeOption(name, value.asArray().get(0).asDouble(), value.asArray().get(1).asDouble());
-        } else if (value.isNumber()) {
-            return new DoubleOption(name, value.asDouble());
-        } else {
-            return null;
-        }
-    }
+
+
 
 }

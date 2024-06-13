@@ -17,8 +17,13 @@ public abstract class DistributionOption<Enum> implements IDistributionOption<En
         this.values = new ArrayList<>();
         int latestThreshold = 0;
         for (Enum value : distribution.keySet()) {
-            latestThreshold = (int) Math.round(distribution.get(value) * 1000) + latestThreshold;
-            thresholds.add(latestThreshold);
+            int probability  = (int) Math.round(distribution.get(value) * 1000);
+            if (probability == 0) {
+                thresholds.add(-1);
+            } else {
+                latestThreshold =  probability + latestThreshold;
+                thresholds.add(latestThreshold);
+            }
             values.add(value);
         }
     }
