@@ -11,8 +11,8 @@
       "distribution" : {
         "boolean" : 0.7,
         "integer" : 0.2,
-        "real" : 0.1,
-        "string" : 0
+        "real" : 0.05,
+        "string" : 0.05
       },
       "cardinality" : {
         "min" : [1,2],
@@ -36,10 +36,10 @@
     "ecr" : 0.8,
     "variablesPerConstraint" : [2,15],
     "distribution" : {
-      "boolean" : 0.9,
+      "boolean" : 0.8,
       "numeric" : 0.07,
       "aggregate" : 0.03,
-      "string" : 0
+      "string" : 0.1
     }
   },
   "attributes" : [

@@ -105,7 +105,7 @@ public class FeatureModelGenerator {
             case STRING -> generateStringConstraint();
             case AGGREGATE -> generateAggregateConstraint();
             case BOOLEAN -> generateBooleanConstraint();
-            default -> genereateNumericConstraint();
+            default -> generateNumericConstraint();
         };
     }
 
@@ -116,7 +116,7 @@ public class FeatureModelGenerator {
             case 0 ->
                     new EqualEquationConstraint(new LiteralExpression(feature), new StringExpression(Integer.toString(config.randomGenerator.nextInt())));
             case 1 ->
-                    new EqualEquationConstraint(new LengthAggregateFunctionExpression(feature), new NumberExpression(config.randomGenerator.nextInt()));
+                    new EqualEquationConstraint(new LengthAggregateFunctionExpression(feature), new NumberExpression(config.randomGenerator.nextInt(1000)));
             default -> null;
         };
     }
@@ -142,7 +142,7 @@ public class FeatureModelGenerator {
     }
 
 
-    private Constraint genereateNumericConstraint() {
+    private Constraint generateNumericConstraint() {
         int numberOfVariables = config.constraintSize.getNextValue(config.randomGenerator);
         int[] variableIndices = getRandomIndices(attributesToUse.size(), numberOfVariables, config.randomGenerator);
         int rightSideSwap = config.randomGenerator.nextInt(numberOfVariables);
@@ -261,7 +261,7 @@ public class FeatureModelGenerator {
     }
 
     private FeatureType getNextFeatureType() {
-        return FeatureType.BOOL;
+        return config.featureType.getNextValue(config.randomGenerator);
     }
 
     private Cardinality getNextGroupCardinality(Group group) {
