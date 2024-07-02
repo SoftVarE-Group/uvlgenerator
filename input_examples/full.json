@@ -25,9 +25,9 @@
       "distribution": {
         "optional" : 0.1,
         "mandatory" : 0.2,
-        "alternative" : 0.5,
+        "alternative" : 0.3,
         "or" : 0.2,
-        "groupCardinality" : 0
+        "groupCardinality" : 0.2
       }
     }
   },

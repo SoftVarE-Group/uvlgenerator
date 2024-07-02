@@ -1,7 +1,9 @@
 # UVL Generator
 
 ### Dependencies
-This UVL generator depends on [uvl-smt](https://github.com/SoftVarE-Group/uvl-smt) for reasoning and [java-fm-metamodel](https://github.com/Universal-Variability-Language/java-fm-metamodel/tree/refactoring_metamodel) for managing the model objects. 
+This UVL generator depends on [uvl-smt](https://github.com/SoftVarE-Group/uvl-smt) for reasoning and [java-fm-metamodel](https://github.com/Universal-Variability-Language/java-fm-metamodel/tree/refactoring_metamodel) for managing the model objects.
+
+UVL-SMT depends on z3 binaries which need to be correctly linked when running the generator. Check their [README]([uvl-smt](https://github.com/SoftVarE-Group/uvl-smt/README.md)) for instructions.
 
 ### Usage
 The generator expects a path to a config.json file as input. You can find examples for usage in `input_examples`.

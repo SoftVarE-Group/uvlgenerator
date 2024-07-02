@@ -78,6 +78,10 @@ public class FeatureModelGenerator {
                 if (feature.getChildren().get(i).getFeatures().isEmpty()) {
                     feature.getChildren().remove(i);
                     i--;
+                } else {
+                    if (feature.getChildren().get(i).GROUPTYPE == Group.GroupType.GROUP_CARDINALITY) { // Append cardinalities now that number of children are known
+                        feature.getChildren().get(i).setCardinality(getNextGroupCardinality(feature.getChildren().get(i)));
+                    }
                 }
             }
         }
@@ -260,8 +264,10 @@ public class FeatureModelGenerator {
         return FeatureType.BOOL;
     }
 
-    private Cardinality getNextCardinality() {
-        return null;
+    private Cardinality getNextGroupCardinality(Group group) {
+        int max = config.randomGenerator.nextInt(group.getFeatures().size()) + 1;
+        int min = config.randomGenerator.nextInt(max + 1);
+        return new Cardinality(min, max);
     }
 
     private Group.GroupType getNextGroupType() {
