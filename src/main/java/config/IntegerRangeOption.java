@@ -21,7 +21,7 @@ public class IntegerRangeOption implements ConfigurationOption<Integer>{
 
     @Override
     public Integer getNextValue(Random random) {
-        return random.nextInt(upper - lower) + lower;
+        return random.nextInt(upper - lower + 1) + lower;
     }
 
     @Override

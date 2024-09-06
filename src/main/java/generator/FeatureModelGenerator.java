@@ -19,6 +19,8 @@ public class FeatureModelGenerator {
     Configuration config;
     int currentId;
     List<Feature> featuresToUse;
+    List<Feature> booleanFeaturesToUse;
+
     List<Feature> stringFeaturesToUse;
     List<Feature> integerFeaturesToUse;
     List<Feature> doubleFeaturesToUse;
@@ -34,8 +36,14 @@ public class FeatureModelGenerator {
     public List<FeatureModel> run(Configuration config) {
         this.config = config;
         List<FeatureModel> models = new ArrayList<>();
+        int count = 0;
         while (models.size() < config.numberOfModels.getStaticValue()) {
-            models.add(nextFeatureModel());
+            System.out.println("Generating feature model number " + count++ + "...");
+            try {
+                models.add(nextFeatureModel());
+            } catch (IllegalStateException e) {
+                System.out.println("Skipping feature model number " + count++ + "after creating more than 10 unsatisfiable constraints in a row");
+            }
         }
         return models;
     }
@@ -51,8 +59,10 @@ public class FeatureModelGenerator {
         } catch (InvalidConfigurationException e) {
             throw new RuntimeException(e);
         }
+
         smtChecker = new SMTSatisfiabilityChecker(smtConverter.convertFeatureModel(), smtConverter.getContext());
         constructConstraints();
+
 
         return builder.getFeatureModel();
     }
@@ -87,15 +97,20 @@ public class FeatureModelGenerator {
         }
     }
 
-    private void constructConstraints() {
+    private void constructConstraints() throws IllegalStateException {
         initFeaturesToUseInConstraints();
         initAttributesToUseInConstraints(featuresToUse);
-
+        int skippedConstraintsInARow = 0;
         while (builder.getFeatureModel().getOwnConstraints().size() < config.numberOfConstraints.getStaticValue()) {
             Constraint next = getNextConstraint();
             if (next == null) continue; // Can happen if we construct constraints over missing feature types
             if (!config.ensureSAT.getStaticValue() || smtChecker.checkAndKeepIfSatisfiable(smtConverter.convertConstraintToSMT(next))) {
                 builder.addConstraint(next);
+                skippedConstraintsInARow = 0;
+            } else {
+                if (skippedConstraintsInARow++ > 10) {
+                    throw new IllegalStateException();
+                }
             }
         }
     }
@@ -123,8 +138,8 @@ public class FeatureModelGenerator {
 
     private Constraint generateBooleanConstraint() {
         int numberOfVariables = config.constraintSize.getNextValue(config.randomGenerator);
-        int[] variableIndices = getRandomIndices(featuresToUse.size(), numberOfVariables, config.randomGenerator);
-        List<LiteralConstraint> literals = Arrays.stream(variableIndices).mapToObj(x -> new LiteralConstraint(featuresToUse.get(x))).collect(Collectors.toList());
+        int[] variableIndices = getRandomIndices(booleanFeaturesToUse.size(), numberOfVariables, config.randomGenerator);
+        List<LiteralConstraint> literals = Arrays.stream(variableIndices).mapToObj(x -> new LiteralConstraint(booleanFeaturesToUse.get(x))).collect(Collectors.toList());
         Constraint previous = config.randomGenerator.nextInt(2) == 0 ? literals.get(0) : new NotConstraint(literals.get(0));
         for (int i = 1; i < literals.size(); i++) {
             previous = getNextBooleanSubConstraint(literals.get(i), previous);
@@ -156,13 +171,10 @@ public class FeatureModelGenerator {
         for (int i = rightSideSwap + 1; i < numberOfVariables; i++) {
             previous = getNextNumericSubExpression(literals.get(i), previous);
         }
-        return switch (config.randomGenerator.nextInt(6)) {
+        return switch (config.randomGenerator.nextInt(3)) {
             case 0 -> new EqualEquationConstraint(leftSide, previous);
             case 1 -> new GreaterEquationConstraint(leftSide, previous);
-            case 2 -> new GreaterEqualsEquationConstraint(leftSide, previous);
-            case 3 -> new LowerEquationConstraint(leftSide, previous);
-            case 4 -> new LowerEqualsEquationConstraint(leftSide, previous);
-            default -> new NotEqualsEquationConstraint(leftSide, previous);
+            default-> new LowerEquationConstraint(leftSide, previous);
         };
     }
 
@@ -196,9 +208,9 @@ public class FeatureModelGenerator {
             }
         }
         if (average) {
-            return new GreaterEqualsEquationConstraint(new SumAggregateFunctionExpression(new GlobalAttribute(attributeName, builder.getFeatureModel())), new NumberExpression((double) threshold));
+            return new GreaterEquationConstraint(new SumAggregateFunctionExpression(new GlobalAttribute(attributeName, builder.getFeatureModel())), new NumberExpression((double) threshold));
         } else {
-            return new GreaterEqualsEquationConstraint(new AvgAggregateFunctionExpression(new GlobalAttribute(attributeName, builder.getFeatureModel())), new NumberExpression((double) threshold));
+            return new GreaterEquationConstraint(new AvgAggregateFunctionExpression(new GlobalAttribute(attributeName, builder.getFeatureModel())), new NumberExpression((double) threshold));
         }
     }
 
@@ -207,10 +219,14 @@ public class FeatureModelGenerator {
         List<Feature> shuffleCopy = new ArrayList<>(builder.getFeatureModel().getFeatureMap().values());
         Collections.shuffle(shuffleCopy);
         featuresToUse = shuffleCopy.subList(0, numberOfFeatures);
+        booleanFeaturesToUse = new ArrayList<>();
         stringFeaturesToUse = new ArrayList<>();
         integerFeaturesToUse = new ArrayList<>();
         doubleFeaturesToUse = new ArrayList<>();
         for (Feature feature : featuresToUse) {
+            if (feature.getFeatureType() == null || feature.getFeatureType() == FeatureType.BOOL) {
+                booleanFeaturesToUse.add(feature);
+            }
             if (feature.getFeatureType() == FeatureType.STRING) {
                 stringFeaturesToUse.add(feature);
             } else if (feature.getFeatureType() == FeatureType.INT) {
