@@ -10,11 +10,23 @@ import java.util.Random;
 public class ConstraintTypeOption extends DistributionOption<ConstraintTypeOption.ConstraintType> {
 
     public static ConstraintTypeOption fromJson(JsonObject distribution) {
+        if (distribution.isNull() || distribution.isEmpty()) {
+            return createDefault();
+        }
         Map<ConstraintType, Double> options = new HashMap<>();
         options.put(ConstraintType.BOOLEAN, distribution.get("boolean").asDouble());
         options.put(ConstraintType.NUMERIC, distribution.get("numeric").asDouble());
         options.put(ConstraintType.AGGREGATE, distribution.get("aggregate").asDouble());
         options.put(ConstraintType.STRING, distribution.get("string").asDouble());
+        return new ConstraintTypeOption(options);
+    }
+
+    public static ConstraintTypeOption createDefault() {
+        Map<ConstraintType, Double> options = new HashMap<>();
+        options.put(ConstraintType.BOOLEAN, 0.9);
+        options.put(ConstraintType.NUMERIC, 0.05);
+        options.put(ConstraintType.AGGREGATE, 0.04);
+        options.put(ConstraintType.STRING, 0.01);
         return new ConstraintTypeOption(options);
     }
 

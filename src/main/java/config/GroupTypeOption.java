@@ -10,6 +10,16 @@ import java.util.Random;
 
 public class GroupTypeOption extends DistributionOption<Group.GroupType>{
 
+    public static GroupTypeOption createDefault() {
+        Map<Group.GroupType, Double> options = new HashMap<>();
+        options.put(Group.GroupType.OPTIONAL, 0.2);
+        options.put(Group.GroupType.OR, 0.2);
+        options.put(Group.GroupType.MANDATORY, 0.2);
+        options.put(Group.GroupType.ALTERNATIVE, 0.2);
+        options.put(Group.GroupType.GROUP_CARDINALITY, 0.2);
+        return new GroupTypeOption(options);
+    }
+
     public static GroupTypeOption fromJson(JsonObject distribution) {
         Map<Group.GroupType, Double> options = new HashMap<>();
         options.put(Group.GroupType.OPTIONAL, distribution.get("optional").asDouble());

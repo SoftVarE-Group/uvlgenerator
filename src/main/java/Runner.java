@@ -11,7 +11,7 @@ public class Runner {
 
     public static void main(String[] args) throws IOException {
         Configuration config = new Configuration();
-        config.initialize(Files.readString(Path.of(args[0])));
+        config.initializeWithJson(Files.readString(Path.of(args[0])));
         FeatureModelGenerator generator = new FeatureModelGenerator();
         List<FeatureModel> result = generator.run(config);
         int index = 0;

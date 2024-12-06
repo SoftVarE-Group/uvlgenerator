@@ -17,9 +17,16 @@ public class FeatureCardinalityOption implements ConfigurationOption<Cardinality
         this.attachProbability = attachProbability;
     }
 
+    public static FeatureCardinalityOption createDefault(Random rng) {
+        ConfigurationOption<Integer> min = IntegerOption.parseIntegerOption("min", new int[] {1,50});
+        ConfigurationOption<Integer> max = IntegerOption.parseIntegerOption("max", new int[] {1,50});
+        double attachProbability = (double) rng.nextInt(20) / 100;
+        return new FeatureCardinalityOption(min, max, attachProbability);
+    }
+
     public static FeatureCardinalityOption fromJson(JsonObject json) {
-        ConfigurationOption<Integer> min = IntegerOption.parseIntegerOption("min", json.get("min"));
-        ConfigurationOption<Integer> max = IntegerOption.parseIntegerOption("max", json.get("max"));
+        ConfigurationOption<Integer> min = IntegerOption.parseIntegerOptionJson("min", json.get("min"), new int[] {1,50});
+        ConfigurationOption<Integer> max = IntegerOption.parseIntegerOptionJson("max", json.get("max"), new int[] {1,50});
         double attachProbability = json.get("attachProbability").asDouble();
         return new FeatureCardinalityOption(min, max, attachProbability);
     }
@@ -35,7 +42,14 @@ public class FeatureCardinalityOption implements ConfigurationOption<Cardinality
         if (random.nextDouble() > attachProbability) {
             return null;
         }
-        return new Cardinality(min.getNextValue(random), max.getNextValue(random));
+        int minValue;
+        int maxValue;
+        do {
+            minValue = min.getNextValue(random);
+            maxValue = max.getNextValue(random);
+        } while (minValue > maxValue);
+
+        return new Cardinality(minValue, maxValue);
     }
 
     @Override

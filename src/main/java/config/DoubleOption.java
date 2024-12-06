@@ -29,14 +29,21 @@ public class DoubleOption implements ConfigurationOption<Double> {
         return value;
     }
 
+    public static ConfigurationOption<Double> parseDoubleOption(String name, double[] values) {
+        if (values.length == 1) {
+            return new DoubleOption(name, values[0]);
+        } else if (values.length == 2) {
+            return new DoubleRangeOption(name, values[0], values[1]);
+        }
+        return null;
+    }
 
-    public static ConfigurationOption<Double> parseDoubleOption(String name, JsonValue value) {
+    public static ConfigurationOption<Double> parseDoubleOptionJson(String name, JsonValue value, double[] defaultValue) {
         if (value.isArray()) {
             return new DoubleRangeOption(name, value.asArray().get(0).asDouble(), value.asArray().get(1).asDouble());
         } else if (value.isNumber()) {
             return new DoubleOption(name, value.asDouble());
-        } else {
-            return null;
         }
+        return parseDoubleOption(name, defaultValue);
     }
 }

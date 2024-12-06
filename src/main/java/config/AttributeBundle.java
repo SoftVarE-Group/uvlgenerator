@@ -29,6 +29,20 @@ public class AttributeBundle {
         return attributes;
     }
 
+    public static AttributeBundle createRandomAttributeBundle(Random rng) {
+        List<AttributeOption> attributeList = new ArrayList<>();
+        int numberOfAttributes = rng.nextInt(10); // TODO: Random threshold check if this is fine, should never be too many attributes
+        for (int i = 0; i < numberOfAttributes; i++) {
+            String attributeName = "Attribute" + i;
+            int min = 0;
+            int max = rng.nextInt(10000); // TODO: random threshold should be large enough to reflect relative differences between attribute values
+            double probability = (double) rng.nextInt(100) / 100;
+            boolean useInConstraints = true;
+            attributeList.add(new AttributeOption(attributeName, min, max, probability, useInConstraints));
+        }
+        return new AttributeBundle(attributeList);
+    }
+
     public static AttributeBundle fromJson(JsonArray attributes) {
         List<AttributeOption> attributeList = new ArrayList<>();
         for (JsonValue attribute : attributes) {

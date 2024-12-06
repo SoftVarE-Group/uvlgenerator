@@ -20,7 +20,6 @@ public class FeatureModelGenerator {
     int currentId;
     List<Feature> featuresToUse;
     List<Feature> booleanFeaturesToUse;
-
     List<Feature> stringFeaturesToUse;
     List<Feature> integerFeaturesToUse;
     List<Feature> doubleFeaturesToUse;
