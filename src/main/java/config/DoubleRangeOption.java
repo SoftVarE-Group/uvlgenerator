@@ -28,4 +28,12 @@ public class DoubleRangeOption implements ConfigurationOption<Double> {
     public Double getStaticValue() {
         return lower;
     }
+
+    public Double getLower() {
+        return lower;
+    }
+
+    public Double getUpper() {
+        return upper;
+    }
 }

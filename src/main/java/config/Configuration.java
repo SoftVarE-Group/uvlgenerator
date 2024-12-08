@@ -1,5 +1,7 @@
 package config;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import com.eclipsesource.json.Json;
@@ -21,7 +23,6 @@ public class Configuration {
     public FeatureTypeOption featureType;
     public FeatureCardinalityOption featureCardinality;
 
-
     // Constraints
     public ConfigurationOption<Integer> numberOfConstraints;
     public final static int[] DEFAULT_NO_CONSTRAINTS = new int[] {1, 20000};
@@ -34,6 +35,14 @@ public class Configuration {
     public AttributeBundle attributes;
 
     public GroupTypeOption groupType;
+
+    // Options that change their behvaior per feature model
+    List<ConfigurationOption<?>> optionsToRefreshForEveryFeatureModel;
+
+    public Configuration() {
+        optionsToRefreshForEveryFeatureModel = new ArrayList<>();
+    }
+
 
     public void initializeRandom(int models, int seed) {
         this.numberOfModels = new IntegerOption(models, "numberModels");
@@ -54,6 +63,10 @@ public class Configuration {
         this.constraintSize = IntegerOption.parseIntegerOption("constraintSize", DEFAULT_CONSTRAINT_SIZE);
         this.constraintDistribution = ConstraintTypeOption.createDefault();
         this.attributes = AttributeBundle.createRandomAttributeBundle(randomGenerator);
+
+        optionsToRefreshForEveryFeatureModel.add(featureType);
+        optionsToRefreshForEveryFeatureModel.add(constraintDistribution);
+        optionsToRefreshForEveryFeatureModel.add(groupType);
     }
 
     public void initializeWithJson(String configJson) {
