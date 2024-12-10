@@ -7,6 +7,7 @@ public class DoubleRangeOption implements ConfigurationOption<Double> {
     private final String optionName;
     private final Double lower;
     private final Double upper;
+    private double current;
 
     public DoubleRangeOption(String optionName, Double lower, Double upper) {
         this.optionName = optionName;
@@ -26,7 +27,12 @@ public class DoubleRangeOption implements ConfigurationOption<Double> {
 
     @Override
     public Double getStaticValue() {
-        return lower;
+        return current;
+    }
+
+    @Override
+    public void initValue(Random random) {
+        current = random.nextDouble() * (upper - lower) + lower;
     }
 
     public Double getLower() {

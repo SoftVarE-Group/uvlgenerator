@@ -7,6 +7,7 @@ public class IntegerRangeOption implements ConfigurationOption<Integer>{
     private final String optionName;
     private final int lower;
     private final int upper;
+    private int current;
 
     public IntegerRangeOption(String optionName, int lower, int upper) {
         this.optionName = optionName;
@@ -26,6 +27,11 @@ public class IntegerRangeOption implements ConfigurationOption<Integer>{
 
     @Override
     public Integer getStaticValue() {
-        return (upper + lower) / 2;
+        return current;
+    }
+
+    @Override
+    public void initValue(Random random) {
+        this.current = random.nextInt(upper - lower + 1) + lower;
     }
 }

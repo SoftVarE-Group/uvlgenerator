@@ -69,11 +69,14 @@ public abstract class DistributionOption<Enum> implements IDistributionOption<En
         }
         nextIndex = startDynamic;
         for (DoubleRangeOption value : dynamicParameters) {
-            int maxDistro = (int) (value.getUpper() - value.getLower()) * 1000;
+            int maxDistro = (int) ((value.getUpper() - value.getLower()) * 1000);
             int max = Math.min(maxDistro, remaining); // throw the dice while ensuring that we neither have a distribution higher than 1.0 nor passing the limit of the parameter
-            int toAdd = random.nextInt(0, max) + (int) (value.getLower() * 1000);
+
+            int toAdd = max > 0 ? random.nextInt(0, max) + (int) (value.getLower() * 1000) : 0; // random.nextInt(0,0) is invalid :(
+            remaining -= (toAdd - (int) (value.getLower() * 1000));
             distribution.add(nextIndex++, toAdd);
         }
+        this.currentThresholds = new ArrayList<>();
         int latestThreshold = 0;
         for (int singleValue : distribution) {
             latestThreshold += singleValue;

@@ -51,6 +51,7 @@ public class FeatureModelGenerator {
         currentId = 0;
         parentGroups = new ArrayList<>();
         builder = new FeatureModelBuilder();
+        config.updateRefreshOptions();
 
         constructTree();
         try {

@@ -27,9 +27,9 @@ public class FeatureTypeOption extends DistributionOption<FeatureType> {
         }
         Map<FeatureType, ConfigurationOption<Double>> options = new HashMap<>();
         options.put(FeatureType.BOOL, DoubleOption.parseDoubleOptionJson("boolean", distribution.get("boolean"), new double[] {0.9}));
-        options.put(FeatureType.INT, DoubleOption.parseDoubleOptionJson("integer", distribution.get("integer"), new double[] {0.9}));
-        options.put(FeatureType.REAL, DoubleOption.parseDoubleOptionJson("real", distribution.get("real"), new double[] {0.9}));
-        options.put(FeatureType.STRING, DoubleOption.parseDoubleOptionJson("string", distribution.get("string"), new double[] {0.9}));
+        options.put(FeatureType.INT, DoubleOption.parseDoubleOptionJson("integer", distribution.get("integer"), new double[] {0.05}));
+        options.put(FeatureType.REAL, DoubleOption.parseDoubleOptionJson("real", distribution.get("real"), new double[] {0.04}));
+        options.put(FeatureType.STRING, DoubleOption.parseDoubleOptionJson("string", distribution.get("string"), new double[] {0.01}));
         return new FeatureTypeOption(options);
     }
 

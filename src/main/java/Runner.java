@@ -1,3 +1,4 @@
+import cli.CLIMap;
 import config.Configuration;
 import de.vill.model.FeatureModel;
 import generator.FeatureModelGenerator;
@@ -10,8 +11,16 @@ import java.util.List;
 public class Runner {
 
     public static void main(String[] args) throws IOException {
+        CLIMap cli = new CLIMap();
+        cli.parseAndVerifyArgs(args);
         Configuration config = new Configuration();
-        config.initializeWithJson(Files.readString(Path.of(args[0])));
+
+        if (cli.useDefault) {
+            config.initializeRandom(cli.numberOfModels, cli.seed);
+        } else {
+            config.initializeWithJson(Files.readString(Path.of(cli.filePath)));
+        }
+
         FeatureModelGenerator generator = new FeatureModelGenerator();
         List<FeatureModel> result = generator.run(config);
         int index = 0;

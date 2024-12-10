@@ -18,15 +18,15 @@ public class FeatureCardinalityOption implements ConfigurationOption<Cardinality
     }
 
     public static FeatureCardinalityOption createDefault(Random rng) {
-        ConfigurationOption<Integer> min = IntegerOption.parseIntegerOption("min", new int[] {1,50});
-        ConfigurationOption<Integer> max = IntegerOption.parseIntegerOption("max", new int[] {1,50});
+        ConfigurationOption<Integer> min = IntegerOption.parseIntegerOption("min", new int[] {1,20});
+        ConfigurationOption<Integer> max = IntegerOption.parseIntegerOption("max", new int[] {1,30});
         double attachProbability = (double) rng.nextInt(20) / 100;
         return new FeatureCardinalityOption(min, max, attachProbability);
     }
 
     public static FeatureCardinalityOption fromJson(JsonObject json) {
-        ConfigurationOption<Integer> min = IntegerOption.parseIntegerOptionJson("min", json.get("min"), new int[] {1,50});
-        ConfigurationOption<Integer> max = IntegerOption.parseIntegerOptionJson("max", json.get("max"), new int[] {1,50});
+        ConfigurationOption<Integer> min = IntegerOption.parseIntegerOptionJson("min", json.get("min"), new int[] {1,20});
+        ConfigurationOption<Integer> max = IntegerOption.parseIntegerOptionJson("max", json.get("max"), new int[] {1,30});
         double attachProbability = json.get("attachProbability").asDouble();
         return new FeatureCardinalityOption(min, max, attachProbability);
     }

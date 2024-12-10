@@ -13,9 +13,9 @@ public class ConstraintTypeOption extends DistributionOption<ConstraintTypeOptio
     static {
         defaultValues = new HashMap<>();
         defaultValues.put("boolean", new double[] {0.4, 0.95});
-        defaultValues.put("numeric", new double[] {0.0, 0.5});
-        defaultValues.put("aggregate", new double[] {0.0, 0.2});
-        defaultValues.put("string", new double[] {0.0, 0.1});
+        defaultValues.put("numeric", new double[] {0.0, 0.2});
+        defaultValues.put("aggregate", new double[] {0.0, 0.1});
+        defaultValues.put("string", new double[] {0.0, 0.0});
 
     }
 

@@ -15,34 +15,29 @@ public class Configuration {
     public BooleanOption ensureSAT;
     // Tree
     public ConfigurationOption<Integer> numberOfFeatures;
-    public final static int[] DEFAULT_NO_FEATURES = new int[] {1, 5000};
+    public final static int[] DEFAULT_NO_FEATURES = new int[] {500, 5000};
     public ConfigurationOption<Integer> treeDepth;
-    public final static int[] DEFAULT_TREE_DEPTH = new int[] {2, 20};
+    public final static int[] DEFAULT_TREE_DEPTH = new int[] {2, 10};
     public ConfigurationOption<Integer> numberOfChildren;
-    public final static int[] DEFAULT_NO_CHILDREN = new int[] {1,100};
+    public final static int[] DEFAULT_NO_CHILDREN = new int[] {1,50};
     public FeatureTypeOption featureType;
     public FeatureCardinalityOption featureCardinality;
 
     // Constraints
     public ConfigurationOption<Integer> numberOfConstraints;
-    public final static int[] DEFAULT_NO_CONSTRAINTS = new int[] {1, 20000};
+    public final static int[] DEFAULT_NO_CONSTRAINTS = new int[] {50, 200};
     public ConstraintTypeOption constraintDistribution;
     public ConfigurationOption<Integer> constraintSize;
-    public final static int[] DEFAULT_CONSTRAINT_SIZE = new int[] {1, 50};
+    public final static int[] DEFAULT_CONSTRAINT_SIZE = new int[] {1, 10};
     public ConfigurationOption<Double> ecr;
-    public final static double[] DEFAULT_ECR = new double[] {0.01,1.0};
+    public final static double[] DEFAULT_ECR = new double[] {0.4,1.0};
     // Attributes
     public AttributeBundle attributes;
 
     public GroupTypeOption groupType;
 
-    // Options that change their behvaior per feature model
+    // Options that change their behavior per feature model
     List<ConfigurationOption<?>> optionsToRefreshForEveryFeatureModel;
-
-    public Configuration() {
-        optionsToRefreshForEveryFeatureModel = new ArrayList<>();
-    }
-
 
     public void initializeRandom(int models, int seed) {
         this.numberOfModels = new IntegerOption(models, "numberModels");
@@ -64,9 +59,7 @@ public class Configuration {
         this.constraintDistribution = ConstraintTypeOption.createDefault();
         this.attributes = AttributeBundle.createRandomAttributeBundle(randomGenerator);
 
-        optionsToRefreshForEveryFeatureModel.add(featureType);
-        optionsToRefreshForEveryFeatureModel.add(constraintDistribution);
-        optionsToRefreshForEveryFeatureModel.add(groupType);
+        initRefreshOptions();
     }
 
     public void initializeWithJson(String configJson) {
@@ -102,6 +95,27 @@ public class Configuration {
         // Attributes
         this.attributes = AttributeBundle.fromJson(json.get("attributes").asArray());
 
+        initRefreshOptions();
+    }
+
+    private void initRefreshOptions() {
+        this.optionsToRefreshForEveryFeatureModel = new ArrayList<>();
+        // Distribution
+        optionsToRefreshForEveryFeatureModel.add(featureType);
+        optionsToRefreshForEveryFeatureModel.add(constraintDistribution);
+        optionsToRefreshForEveryFeatureModel.add(groupType);
+
+        // global properties that are possibly ranges
+        optionsToRefreshForEveryFeatureModel.add(numberOfFeatures);
+        optionsToRefreshForEveryFeatureModel.add(treeDepth);
+        optionsToRefreshForEveryFeatureModel.add(numberOfConstraints);
+        optionsToRefreshForEveryFeatureModel.add(ecr);
+    }
+
+    public void updateRefreshOptions() {
+        for (ConfigurationOption<?> refreshOption : optionsToRefreshForEveryFeatureModel) {
+            refreshOption.initValue(this.randomGenerator);
+        }
     }
 
 

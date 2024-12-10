@@ -6,8 +6,11 @@ This UVL generator depends on [uvl-smt](https://github.com/SoftVarE-Group/uvl-sm
 UVL-SMT depends on z3 binaries which need to be correctly linked when running the generator. Check their [README]([uvl-smt](https://github.com/SoftVarE-Group/uvl-smt/README.md)) for instructions.
 
 ### Usage
-The generator expects a path to a config.json file as input. You can find examples for usage in `input_examples`.
+Currently, the generator has two main modes. Generating random models with default bounds or generating models with more specialized properties specified as json file. 
+You can find examples for json files in `input_examples`.
 The main method can be found in the `Runner.java` class.
+For random models, use the options `--boundedRandom --n <numberOfModels>`.
+For using a file, use `--file <path/to/file>`.
 
 The .json contains various configuration options that enable the user to control structural properties of the generated feature models.
 The example below generates 10 feature models with 500-600 features and 50--100 constraints. 
