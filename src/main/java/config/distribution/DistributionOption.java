@@ -4,10 +4,7 @@ import config.ConfigurationOption;
 import config.DoubleOption;
 import config.DoubleRangeOption;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public abstract class DistributionOption<Enum> implements IDistributionOption<Enum> {
 
@@ -24,16 +21,25 @@ public abstract class DistributionOption<Enum> implements IDistributionOption<En
         this.staticParameters = new ArrayList<>();
         this.dynamicParameters = new ArrayList<>();
         this.values = new ArrayList<>();
-        for (Enum value : distribution.keySet()) {
-            values.add(value);
+        Set<Enum> keySet = new TreeSet<>(distribution.keySet()); // Ensure keyset order stays the same
+        for (Enum value : keySet) { // Ensure static parameters are first
             ConfigurationOption<Double> currentParameter = distribution.get(value);
             if (currentParameter instanceof DoubleOption) {
                 staticParameters.add((DoubleOption) currentParameter);
-            } else if (currentParameter instanceof DoubleRangeOption) {
-                dynamicParameters.add((DoubleRangeOption) currentParameter);
-                this.staticDistribution = false;
+                values.add(value);
             }
         }
+
+        for (Enum value : keySet) {
+            ConfigurationOption<Double> currentParameter = distribution.get(value);
+            if (currentParameter instanceof DoubleRangeOption) {
+                dynamicParameters.add((DoubleRangeOption) currentParameter);
+                this.staticDistribution = false;
+                values.add(value);
+            }
+        }
+
+
         if (staticDistribution) {
             int latestThreshold = 0;
             this.currentThresholds = new ArrayList<>();
@@ -86,7 +92,7 @@ public abstract class DistributionOption<Enum> implements IDistributionOption<En
 
     @Override
     public Enum getNextValue(Random random) {
-        int result = random.nextInt(1000);
+        int result = random.nextInt(1,1001);
         for (int i = 0; i < currentThresholds.size(); i++) {
             if (result <= currentThresholds.get(i)) {
                 return values.get(i);

@@ -31,6 +31,11 @@ public class Configuration {
     public final static int[] DEFAULT_CONSTRAINT_SIZE = new int[] {1, 10};
     public ConfigurationOption<Double> ecr;
     public final static double[] DEFAULT_ECR = new double[] {0.4,1.0};
+
+    // Expressions
+    public ArithmeticOption arithmeticDistribution;
+    public EquationOption equationDistribution;
+
     // Attributes
     public AttributeBundle attributes;
 
@@ -58,6 +63,8 @@ public class Configuration {
         this.constraintSize = IntegerOption.parseIntegerOption("constraintSize", DEFAULT_CONSTRAINT_SIZE);
         this.constraintDistribution = ConstraintTypeOption.createDefault();
         this.attributes = AttributeBundle.createRandomAttributeBundle(randomGenerator);
+        this.arithmeticDistribution = ArithmeticOption.createDefault();
+        this.equationDistribution = EquationOption.createDefault();
 
         initRefreshOptions();
     }
@@ -92,6 +99,10 @@ public class Configuration {
         this.constraintSize = IntegerOption.parseIntegerOptionJson("constraintSize", constraints.get("variablesPerConstraint"), DEFAULT_CONSTRAINT_SIZE);
         this.constraintDistribution = ConstraintTypeOption.fromJson(constraints.get("distribution").asObject());
 
+        // Expressions
+        this.arithmeticDistribution = ArithmeticOption.fromJson(constraints.get("arithmeticDistribution").asObject());
+        this.equationDistribution = EquationOption.fromJson(constraints.get(("equationDistribution")).asObject());
+
         // Attributes
         this.attributes = AttributeBundle.fromJson(json.get("attributes").asArray());
 
@@ -104,6 +115,8 @@ public class Configuration {
         optionsToRefreshForEveryFeatureModel.add(featureType);
         optionsToRefreshForEveryFeatureModel.add(constraintDistribution);
         optionsToRefreshForEveryFeatureModel.add(groupType);
+        optionsToRefreshForEveryFeatureModel.add(equationDistribution);
+        optionsToRefreshForEveryFeatureModel.add(arithmeticDistribution);
 
         // global properties that are possibly ranges
         optionsToRefreshForEveryFeatureModel.add(numberOfFeatures);

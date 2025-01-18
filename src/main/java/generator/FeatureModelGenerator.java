@@ -25,12 +25,16 @@ public class FeatureModelGenerator {
     List<Feature> doubleFeaturesToUse;
     List<Attribute<?>> attributesToUse;
     List<String> attributeNames;
+    List<String> remainigAttributesForAggregates;
+
 
     List<Group> parentGroups;
 
     FmToSMTConverter smtConverter;
 
+
     SMTSatisfiabilityChecker smtChecker;
+    SMTSatisfiabilityChecker standaloneConstraintChecker;
 
     public List<FeatureModel> run(Configuration config) {
         this.config = config;
@@ -101,9 +105,11 @@ public class FeatureModelGenerator {
         initFeaturesToUseInConstraints();
         initAttributesToUseInConstraints(featuresToUse);
         int skippedConstraintsInARow = 0;
+        int i = 1;
         while (builder.getFeatureModel().getOwnConstraints().size() < config.numberOfConstraints.getStaticValue()) {
             Constraint next = getNextConstraint();
-            if (next == null) continue; // Can happen if we construct constraints over missing feature types
+            if (next == null) continue; // Can happen if we construct constraints over missing feature types or have no attributes left for aggregates
+            System.out.println("Constraint " + i++ + next);
             if (!config.ensureSAT.getStaticValue() || smtChecker.checkAndKeepIfSatisfiable(smtConverter.convertConstraintToSMT(next))) {
                 builder.addConstraint(next);
                 skippedConstraintsInARow = 0;
@@ -171,19 +177,19 @@ public class FeatureModelGenerator {
         for (int i = rightSideSwap + 1; i < numberOfVariables; i++) {
             previous = getNextNumericSubExpression(literals.get(i), previous);
         }
-        return switch (config.randomGenerator.nextInt(3)) {
-            case 0 -> new EqualEquationConstraint(leftSide, previous);
-            case 1 -> new GreaterEquationConstraint(leftSide, previous);
-            default-> new LowerEquationConstraint(leftSide, previous);
+        return switch (config.equationDistribution.getNextValue(config.randomGenerator)) {
+            case GREATER -> new GreaterEquationConstraint(leftSide, previous);
+            case LESSER -> new LowerEquationConstraint(leftSide, previous);
+            case EQUALS -> new EqualEquationConstraint(leftSide, previous); // no equal equation constraint for now as it is too restrictive and essentially sets all involved features dead
         };
     }
 
     private Expression getNextNumericSubExpression(Expression nextLiteral, Expression previous) {
-        return switch (config.randomGenerator.nextInt(4)) {
-            case 0 -> new AddExpression(nextLiteral, previous);
-            case 1 -> new SubExpression(nextLiteral, previous);
-            case 2 -> new MulExpression(nextLiteral, previous);
-            default -> new DivExpression(nextLiteral, previous);
+        return switch (config.arithmeticDistribution.getNextValue(config.randomGenerator)) {
+            case ADD -> new AddExpression(nextLiteral, previous);
+            case SUBTRACT -> new SubExpression(nextLiteral, previous);
+            case MULTIPLY -> new MulExpression(nextLiteral, previous);
+            case DIVIDE -> new DivExpression(nextLiteral, previous);
         };
     }
 
@@ -192,14 +198,15 @@ public class FeatureModelGenerator {
      * @return
      */
     private Constraint generateAggregateConstraint() {
-        String attributeName = attributeNames.get(config.randomGenerator.nextInt(attributeNames.size()));
+        if (remainigAttributesForAggregates.isEmpty())  return null;
+        String attribute = remainigAttributesForAggregates.remove(config.randomGenerator.nextInt(remainigAttributesForAggregates.size()));
         int threshold = 0;
         boolean average = false;
         if (config.randomGenerator.nextInt(2) == 1) {
             average = true;
         }
         for (AttributeOption attributeOption : config.attributes.attributeOptionList) {
-            if (attributeOption.attributeName.equals(attributeName)) {
+            if (attributeOption.attributeName.equals(attribute)) {
                 if (average) {
                     threshold = config.randomGenerator.nextInt(attributeOption.max - attributeOption.min) + attributeOption.min;
                 } else {
@@ -208,9 +215,9 @@ public class FeatureModelGenerator {
             }
         }
         if (average) {
-            return new GreaterEquationConstraint(new SumAggregateFunctionExpression(new GlobalAttribute(attributeName, builder.getFeatureModel())), new NumberExpression((double) threshold));
+            return new GreaterEquationConstraint(new SumAggregateFunctionExpression(new GlobalAttribute(attribute, builder.getFeatureModel())), new NumberExpression((double) threshold));
         } else {
-            return new GreaterEquationConstraint(new AvgAggregateFunctionExpression(new GlobalAttribute(attributeName, builder.getFeatureModel())), new NumberExpression((double) threshold));
+            return new GreaterEquationConstraint(new AvgAggregateFunctionExpression(new GlobalAttribute(attribute, builder.getFeatureModel())), new NumberExpression((double) threshold));
         }
     }
 
@@ -240,6 +247,8 @@ public class FeatureModelGenerator {
     private void initAttributesToUseInConstraints(List<Feature> featuresToUse) {
         attributesToUse = new ArrayList<>();
         attributeNames = config.attributes.attributeOptionList.stream().filter(x -> x.includeInConstraints).map(x -> x.attributeName).collect(Collectors.toList());
+        remainigAttributesForAggregates = new ArrayList<>();
+        remainigAttributesForAggregates.addAll(attributeNames);
         for (String attributeName : attributeNames) {
             for (Feature feature : featuresToUse) {
                 if (feature.getAttributes().containsKey(attributeName)) {
