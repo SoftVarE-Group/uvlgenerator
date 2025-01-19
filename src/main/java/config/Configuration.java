@@ -6,6 +6,18 @@ import java.util.Random;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import config.constraints.AggregateOption;
+import config.constraints.ArithmeticOption;
+import config.constraints.ConstraintTypeOption;
+import config.constraints.EquationOption;
+import config.helper.BooleanOption;
+import config.helper.ConfigurationOption;
+import config.helper.DoubleOption;
+import config.helper.IntegerOption;
+import config.tree.AttributeBundle;
+import config.tree.FeatureCardinalityOption;
+import config.tree.FeatureTypeOption;
+import config.tree.GroupTypeOption;
 
 public class Configuration {
 
@@ -35,6 +47,7 @@ public class Configuration {
     // Expressions
     public ArithmeticOption arithmeticDistribution;
     public EquationOption equationDistribution;
+    public AggregateOption aggregateDistribution;
 
     // Attributes
     public AttributeBundle attributes;
@@ -65,6 +78,7 @@ public class Configuration {
         this.attributes = AttributeBundle.createRandomAttributeBundle(randomGenerator);
         this.arithmeticDistribution = ArithmeticOption.createDefault();
         this.equationDistribution = EquationOption.createDefault();
+        this.aggregateDistribution = AggregateOption.createDefault();
 
         initRefreshOptions();
     }
@@ -102,7 +116,7 @@ public class Configuration {
         // Expressions
         this.arithmeticDistribution = ArithmeticOption.fromJson(constraints.get("arithmeticDistribution").asObject());
         this.equationDistribution = EquationOption.fromJson(constraints.get(("equationDistribution")).asObject());
-
+        this.aggregateDistribution = AggregateOption.fromJson(constraints.get("aggregateDistribution").asObject());
         // Attributes
         this.attributes = AttributeBundle.fromJson(json.get("attributes").asArray());
 
@@ -117,6 +131,7 @@ public class Configuration {
         optionsToRefreshForEveryFeatureModel.add(groupType);
         optionsToRefreshForEveryFeatureModel.add(equationDistribution);
         optionsToRefreshForEveryFeatureModel.add(arithmeticDistribution);
+        optionsToRefreshForEveryFeatureModel.add(aggregateDistribution);
 
         // global properties that are possibly ranges
         optionsToRefreshForEveryFeatureModel.add(numberOfFeatures);

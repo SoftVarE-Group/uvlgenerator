@@ -1,6 +1,9 @@
-package config;
+package config.constraints;
 
 import com.eclipsesource.json.JsonObject;
+import config.helper.ConfigurationOption;
+import config.helper.DoubleOption;
+import config.helper.DoubleRangeOption;
 import config.distribution.DistributionOption;
 
 import java.util.HashMap;

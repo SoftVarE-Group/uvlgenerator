@@ -59,6 +59,17 @@ An attribute price is attached to features with a 50% chance and with values bet
       "numeric" : 0.07,
       "aggregate" : 0.03,
       "string" : 0
+    },
+    "equationDistribution" : {
+      "equals" : 0,
+      "greater" : [0.3,0.7],
+      "lesser" : [0.3, 0.7]
+    },
+    "arithmeticDistribution" : {
+      "add" : [0.3,0.7],
+      "subtract" : [0.3, 0.7],
+      "multiply" : [0.3, 0.7],
+      "divide" : 0
     }
   },
   "attributes" : [
@@ -71,3 +82,10 @@ An attribute price is attached to features with a 50% chance and with values bet
   ]
 }
 ```
+
+### Remarks
+We have observed the following effects that might impact the generation of UVL models:
+* Including the division operator substantially increases runtime when generating larger UVL models.
+* Including the numerical equals operator is typically very restrictive and just sets involved features to dead.
+* The average aggregate resolves to very complex constraints for feature models with many attribute incarnations. Hence, using avg() will substantially increase runtimes.
+* Using a high number of variablesPerConstraint results in many unsatisfiable constraints which also substantially increases runtimes. This is further amplified when the number of features smaller and the factor features / constraint size is small.

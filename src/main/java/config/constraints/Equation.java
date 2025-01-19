@@ -1,4 +1,4 @@
-package config;
+package config.constraints;
 
 public enum Equation {
 

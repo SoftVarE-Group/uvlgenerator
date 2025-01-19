@@ -1,8 +1,8 @@
 package config.distribution;
 
-import config.ConfigurationOption;
-import config.DoubleOption;
-import config.DoubleRangeOption;
+import config.helper.ConfigurationOption;
+import config.helper.DoubleOption;
+import config.helper.DoubleRangeOption;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package config;
+package config.tree;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;

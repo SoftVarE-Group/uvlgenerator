@@ -1,9 +1,10 @@
 package generator;
 
 import Reasoning.SMTSatisfiabilityChecker;
-import config.AttributeOption;
+import config.constraints.Aggregate;
+import config.tree.AttributeOption;
 import config.Configuration;
-import config.ConstraintTypeOption;
+import config.constraints.ConstraintTypeOption;
 import conversion.FmToSMTConverter;
 import de.vill.model.*;
 import de.vill.model.building.FeatureModelBuilder;
@@ -25,7 +26,7 @@ public class FeatureModelGenerator {
     List<Feature> doubleFeaturesToUse;
     List<Attribute<?>> attributesToUse;
     List<String> attributeNames;
-    List<String> remainigAttributesForAggregates;
+    List<String> remainingAttributesForAggregates;
 
 
     List<Group> parentGroups;
@@ -34,7 +35,6 @@ public class FeatureModelGenerator {
 
 
     SMTSatisfiabilityChecker smtChecker;
-    SMTSatisfiabilityChecker standaloneConstraintChecker;
 
     public List<FeatureModel> run(Configuration config) {
         this.config = config;
@@ -198,27 +198,22 @@ public class FeatureModelGenerator {
      * @return
      */
     private Constraint generateAggregateConstraint() {
-        if (remainigAttributesForAggregates.isEmpty())  return null;
-        String attribute = remainigAttributesForAggregates.remove(config.randomGenerator.nextInt(remainigAttributesForAggregates.size()));
-        int threshold = 0;
-        boolean average = false;
-        if (config.randomGenerator.nextInt(2) == 1) {
-            average = true;
-        }
+        if (remainingAttributesForAggregates.isEmpty())  return null;
+        String attribute = remainingAttributesForAggregates.remove(config.randomGenerator.nextInt(remainingAttributesForAggregates.size()));
+        int threshold;
+        Aggregate desiredAggregate = config.aggregateDistribution.getNextValue(config.randomGenerator);
         for (AttributeOption attributeOption : config.attributes.attributeOptionList) {
             if (attributeOption.attributeName.equals(attribute)) {
-                if (average) {
+                if (desiredAggregate == Aggregate.AVERAGE) {
                     threshold = config.randomGenerator.nextInt(attributeOption.max - attributeOption.min) + attributeOption.min;
-                } else {
+                    return new GreaterEquationConstraint(new SumAggregateFunctionExpression(new GlobalAttribute(attribute, builder.getFeatureModel())), new NumberExpression(threshold));
+                } else if (desiredAggregate == Aggregate.SUM) {
                     threshold = config.randomGenerator.nextInt(attributeOption.max * 5); // TODO: replace
+                    return new GreaterEquationConstraint(new AvgAggregateFunctionExpression(new GlobalAttribute(attribute, builder.getFeatureModel())), new NumberExpression(threshold));
                 }
             }
         }
-        if (average) {
-            return new GreaterEquationConstraint(new SumAggregateFunctionExpression(new GlobalAttribute(attribute, builder.getFeatureModel())), new NumberExpression((double) threshold));
-        } else {
-            return new GreaterEquationConstraint(new AvgAggregateFunctionExpression(new GlobalAttribute(attribute, builder.getFeatureModel())), new NumberExpression((double) threshold));
-        }
+        return null;
     }
 
     private void initFeaturesToUseInConstraints() {
@@ -247,8 +242,8 @@ public class FeatureModelGenerator {
     private void initAttributesToUseInConstraints(List<Feature> featuresToUse) {
         attributesToUse = new ArrayList<>();
         attributeNames = config.attributes.attributeOptionList.stream().filter(x -> x.includeInConstraints).map(x -> x.attributeName).collect(Collectors.toList());
-        remainigAttributesForAggregates = new ArrayList<>();
-        remainigAttributesForAggregates.addAll(attributeNames);
+        remainingAttributesForAggregates = new ArrayList<>();
+        remainingAttributesForAggregates.addAll(attributeNames);
         for (String attributeName : attributeNames) {
             for (Feature feature : featuresToUse) {
                 if (feature.getAttributes().containsKey(attributeName)) {

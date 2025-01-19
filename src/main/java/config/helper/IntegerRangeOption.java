@@ -1,8 +1,8 @@
-package config;
+package config.helper;
 
 import java.util.Random;
 
-public class IntegerRangeOption implements ConfigurationOption<Integer>{
+public class IntegerRangeOption implements ConfigurationOption<Integer> {
 
     private final String optionName;
     private final int lower;

@@ -1,4 +1,4 @@
-package config;
+package config.tree;
 
 import de.vill.model.Attribute;
 import de.vill.model.Feature;

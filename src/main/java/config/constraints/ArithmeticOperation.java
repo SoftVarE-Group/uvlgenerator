@@ -1,6 +1,4 @@
-package config;
-
-import de.vill.model.FeatureType;
+package config.constraints;
 
 public enum ArithmeticOperation {
 

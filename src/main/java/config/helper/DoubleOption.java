@@ -1,4 +1,4 @@
-package config;
+package config.helper;
 
 import com.eclipsesource.json.JsonValue;
 

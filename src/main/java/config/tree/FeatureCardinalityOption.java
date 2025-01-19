@@ -1,6 +1,8 @@
-package config;
+package config.tree;
 
 import com.eclipsesource.json.JsonObject;
+import config.helper.ConfigurationOption;
+import config.helper.IntegerOption;
 import de.vill.model.Cardinality;
 
 import java.util.Random;

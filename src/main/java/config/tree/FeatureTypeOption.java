@@ -1,12 +1,14 @@
-package config;
+package config.tree;
 
 import com.eclipsesource.json.JsonObject;
+import config.helper.ConfigurationOption;
+import config.helper.DoubleOption;
+import config.helper.DoubleRangeOption;
 import config.distribution.DistributionOption;
 import de.vill.model.FeatureType;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class FeatureTypeOption extends DistributionOption<FeatureType> {
 
