@@ -1,13 +1,13 @@
 {
   "general" : {
     "numberModels" : 5,
-    "seed" : 42,
+    "seed" : 60,
     "ensureSAT" : true,
     "generatorVersion" : "0.1"
   },
   "tree" : {
     "features" : {
-      "number" : [500,600],
+      "number" : [4000,4500],
       "distribution" : {
         "boolean" : 0.7,
         "integer" : 0.2,
@@ -23,16 +23,16 @@
     "maxTreeDepth" : 5,
     "groups" : {
       "distribution": {
-        "optional" : 0.1,
-        "mandatory" : 0.2,
-        "alternative" : 0.3,
-        "or" : 0.2,
-        "groupCardinality" : 0.2
+        "optional" : [0.1,0.3],
+        "mandatory" : [0.2,0.4],
+        "alternative" : [0.1,0.3],
+        "or" : [0.03,0.15],
+        "groupCardinality" : [0.05,0.15]
       }
     }
   },
   "constraints" : {
-    "number" : [50,100],
+    "number" : [500,2000],
     "ecr" : 0.8,
     "variablesPerConstraint" : [2,15],
     "distribution" : {
@@ -40,6 +40,21 @@
       "numeric" : 0.07,
       "aggregate" : 0.03,
       "string" : 0.1
+    },
+    "equationDistribution" : {
+      "equals" : 0,
+      "greater" : [0.3,0.7],
+      "lesser" : [0.3, 0.7]
+    },
+    "arithmeticDistribution" : {
+      "add" : [0.3,0.7],
+      "subtract" : [0.3, 0.7],
+      "multiply" : [0.3, 0.7],
+      "divide" : 0
+    },
+    "aggregateDistribution" : {
+      "sum" : 1,
+      "avg" : 0
     }
   },
   "attributes" : [
