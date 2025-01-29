@@ -204,16 +204,27 @@ public class FeatureModelGenerator {
         Aggregate desiredAggregate = config.aggregateDistribution.getNextValue(config.randomGenerator);
         for (AttributeOption attributeOption : config.attributes.attributeOptionList) {
             if (attributeOption.attributeName.equals(attribute)) {
-                if (desiredAggregate == Aggregate.AVERAGE) {
-                    threshold = config.randomGenerator.nextInt(attributeOption.max - attributeOption.min) + attributeOption.min;
+                if (desiredAggregate == Aggregate.SUM) {
+
+                    threshold = (config.randomGenerator.nextInt(attributeOption.max - attributeOption.min) + attributeOption.min) * (getNumberOfAllAttributes(attribute) / 10) ; // TODO: overflows may occur
                     return new GreaterEquationConstraint(new SumAggregateFunctionExpression(new GlobalAttribute(attribute, builder.getFeatureModel())), new NumberExpression(threshold));
-                } else if (desiredAggregate == Aggregate.SUM) {
-                    threshold = config.randomGenerator.nextInt(attributeOption.max * 5); // TODO: replace
+                } else if (desiredAggregate == Aggregate.AVERAGE) {
+                    threshold = config.randomGenerator.nextInt(attributeOption.max - attributeOption.min) + attributeOption.min;
+
                     return new GreaterEquationConstraint(new AvgAggregateFunctionExpression(new GlobalAttribute(attribute, builder.getFeatureModel())), new NumberExpression(threshold));
                 }
             }
         }
         return null;
+    }
+
+    private int getNumberOfAllAttributes(String identifier) {
+        int count = 0;
+        for (Feature feat : builder.getFeatureModel().getFeatureMap().values()) {
+            Attribute<?> attribute = feat.getAttributes().get(identifier);
+            count++;
+        }
+        return count;
     }
 
     private void initFeaturesToUseInConstraints() {
